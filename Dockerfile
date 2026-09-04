@@ -12,7 +12,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code
 COPY . .
 
-# Expose port 8000 (standard for Koyeb, though configurable)
+# Generate data and train the model during the build process
+RUN python src/data_generator.py && \
+    python src/train_verifier.py && \
+    python src/evaluate.py
+
+# Expose port 8000
 EXPOSE 8000
 
 # Run the Streamlit app
