@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RazorSentinel-AI · Chargeback Defense</title>
+  <meta name="description" content="Autonomous Chargeback Verifier & Evidence Responder. PR-AUC 0.75 · Zero hallucination · Defense-only. Razorpay AI Buildathon Track 02." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── RESET & ROOT ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:    #050914;
+      --card:    #0d1526;
+      --card2:   #111827;
+      --blue:    #4f8ef7;
+      --indigo:  #6366f1;
+      --cyan:    #22d3ee;
+      --gold:    #f59e0b;
+      --green:   #10b981;
+      --red:     #ef4444;
+      --text:    #e8eeff;
+      --muted:   #6b7a9f;
+      --border:  rgba(79,142,247,.18);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--navy);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    ::selection { background: rgba(79,142,247,.3); }
+
+    /* ─── SCROLLBAR ─────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--navy); }
+    ::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 3px; }
+
+    /* ─── ANIMATED BACKGROUND ───────────────────────────────────── */
+    .bg-grid {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(79,142,247,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,142,247,.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: grid-drift 40s linear infinite;
+    }
+    @keyframes grid-drift { to { transform: translateY(60px); } }
+
+    .bg-orbs {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+    }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: .18; animation: float 12s ease-in-out infinite;
+    }
+    .orb-1 { width:500px;height:500px;background:var(--blue);  top:-15%;left:-10%; animation-delay:0s;}
+    .orb-2 { width:400px;height:400px;background:var(--indigo);top:50%;right:-8%; animation-delay:-4s;}
+    .orb-3 { width:300px;height:300px;background:var(--cyan);  bottom:-5%;left:35%;animation-delay:-8s;}
+    @keyframes float {
+      0%,100%{transform:translateY(0) scale(1);}
+      50%{transform:translateY(-30px) scale(1.05);}
+    }
+
+    /* ─── LAYOUT ────────────────────────────────────────────────── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+    /* ─── NAVBAR ─────────────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(5,9,20,.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+    }
+    nav .inner {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; }
+    .nav-logo .icon { font-size: 1.4rem; }
+    .nav-logo .name { font-size: 1.05rem; font-weight: 800; color: #fff; letter-spacing: -.3px; }
+    .nav-logo .track {
+      font-size: .68rem; color: var(--muted); letter-spacing: .8px;
+      text-transform: uppercase; margin-top: 1px;
+    }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-pill {
+      padding: 7px 16px; border-radius: 8px; font-size: .82rem; font-weight: 600;
+      cursor: pointer; text-decoration: none; transition: all .2s;
+    }
+    .nav-pill-ghost {
+      color: var(--muted); border: 1px solid transparent;
+    }
+    .nav-pill-ghost:hover { color: #fff; border-color: var(--border); background: rgba(79,142,247,.08); }
+    .nav-pill-primary {
+      background: linear-gradient(145deg,#5a9bff,#3a72e0);
+      color: #fff;
+      box-shadow: 0 4px 0 #1a3a9a, 0 6px 14px rgba(79,142,247,.35), inset 0 1px 0 rgba(255,255,255,.2);
+      transform: translateY(0);
+    }
+    .nav-pill-primary:hover {
+      box-shadow: 0 2px 0 #1a3a9a, 0 4px 18px rgba(79,142,247,.5), inset 0 1px 0 rgba(255,255,255,.25);
+      transform: translateY(2px);
+    }
+    .nav-pill-primary:active {
+      box-shadow: 0 0px 0 #1a3a9a, 0 2px 8px rgba(79,142,247,.3);
+      transform: translateY(4px);
+    }
+
+    /* ─── HERO ───────────────────────────────────────────────────── */
+    .hero { padding: 100px 0 80px; text-align: center; }
+
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(79,142,247,.1); border: 1px solid rgba(79,142,247,.25);
+      border-radius: 20px; padding: 6px 16px;
+      font-size: .78rem; color: var(--cyan); letter-spacing: .6px; font-weight: 600;
+      margin-bottom: 28px; text-transform: uppercase;
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(1.3)} }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 900; line-height: 1.08; letter-spacing: -.06rem;
+      color: #fff;
+      background: linear-gradient(135deg,#fff 30%,#a0c0ff 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 22px;
+    }
+    .hero p {
+      font-size: 1.12rem; color: #8a9abf; max-width: 640px;
+      margin: 0 auto 38px; line-height: 1.7;
+    }
+
+    /* ─── HERO BUTTONS ───────────────────────────────────────────── */
+    .hero-btns { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 64px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 32px; border-radius: 12px;
+      font-size: .95rem; font-weight: 700; letter-spacing: .3px;
+      text-decoration: none; cursor: pointer;
+      transition: all .15s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(145deg,#5a9bff 0%,#3a72e0 60%,#2855c4 100%);
+      color: #fff;
+      box-shadow: 0 7px 0 #1a3a9a, 0 10px 20px rgba(79,142,247,.4), inset 0 1px 0 rgba(255,255,255,.22);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 4px 0 #1a3a9a, 0 8px 24px rgba(79,142,247,.55), inset 0 1px 0 rgba(255,255,255,.28);
+      transform: translateY(3px);
+    }
+    .btn-primary:active {
+      box-shadow: 0 1px 0 #1a3a9a, 0 3px 10px rgba(79,142,247,.35);
+      transform: translateY(6px);
+    }
+    .btn-ghost {
+      color: var(--text); border: 1px solid var(--border);
+      background: rgba(79,142,247,.06);
+    }
+    .btn-ghost:hover {
+      background: rgba(79,142,247,.12); border-color: rgba(79,142,247,.35);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(79,142,247,.15);
+    }
+
+    /* ─── METRIC STRIP ───────────────────────────────────────────── */
+    .metric-strip {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+      margin-bottom: 90px;
+    }
+    .metric-card {
+      background: linear-gradient(145deg, var(--card2), var(--card));
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 22px 18px; text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .metric-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(79,142,247,.2);
+    }
+    .metric-card .lbl { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .9px; }
+    .metric-card .val {
+      font-size: 1.9rem; font-weight: 900; color: #fff; margin: 8px 0 4px;
+      text-shadow: 0 0 24px rgba(79,142,247,.5);
+    }
+    .metric-card .sub { font-size: .7rem; color: #3a4a6a; }
+
+    /* ─── SECTION HEADING ────────────────────────────────────────── */
+    .section-head { text-align: center; margin-bottom: 52px; }
+    .section-head h2 { font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 10px; }
+    .section-head p { color: var(--muted); font-size: .95rem; max-width: 560px; margin: 0 auto; }
+
+    /* ─── PIPELINE SECTION ───────────────────────────────────────── */
+    .pipeline { padding: 80px 0; }
+    .pipeline-grid { display: grid; grid-template-columns: 1fr 40px 1fr 40px 1fr; align-items: center; gap: 0; }
+    .pipeline-arrow { text-align: center; color: var(--muted); font-size: 1.4rem; }
+    .pipeline-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px 24px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.35);
+      transition: transform .2s, box-shadow .2s;
+      position: relative; overflow: hidden;
+    }
+    .pipeline-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(79,142,247,.18); }
+    .pipeline-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      border-radius: 14px 14px 0 0;
+    }
+    .pc-1::before { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+    .pc-2::before { background: linear-gradient(90deg, var(--indigo), #a78bfa); }
+    .pc-3::before { background: linear-gradient(90deg, var(--green), #34d399); }
+    .pc-num { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px; }
+    .pc-title { font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .pc-sub { font-size: .82rem; color: var(--muted); line-height: 1.6; }
+    .pc-tag {
+      display: inline-block; margin-top: 14px;
+      padding: 4px 10px; border-radius: 6px; font-size: .72rem; font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .tag-blue   { background: rgba(79,142,247,.12); color: var(--blue);   border: 1px solid rgba(79,142,247,.2); }
+    .tag-indigo { background: rgba(99,102,241,.12); color: #818cf8;       border: 1px solid rgba(99,102,241,.2); }
+    .tag-green  { background: rgba(16,185,129,.12); color: var(--green);  border: 1px solid rgba(16,185,129,.2); }
+
+    /* ─── COST MODEL SECTION ─────────────────────────────────────── */
+    .cost-section { padding: 80px 0; }
+    .cost-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .cost-card {
+      border-radius: 14px; padding: 28px 24px;
+      border: 1px solid;
+    }
+    .cost-fp {
+      background: rgba(239,68,68,.06); border-color: rgba(239,68,68,.22);
+    }
+    .cost-fn {
+      background: rgba(245,158,11,.06); border-color: rgba(245,158,11,.22);
+    }
+    .cost-type { font-size: .7rem; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; margin-bottom: 8px; }
+    .cost-fp .cost-type { color: var(--red); }
+    .cost-fn .cost-type { color: var(--gold); }
+    .cost-amount { font-size: 2.4rem; font-weight: 900; color: #fff; margin: 6px 0; }
+    .cost-desc { font-size: .82rem; color: var(--muted); line-height: 1.5; }
+
+    /* ─── FEATURE STRIP ──────────────────────────────────────────── */
+    .features { padding: 80px 0; }
+    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .feat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 26px 22px;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .feat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(79,142,247,.14); }
+    .feat-icon { font-size: 1.8rem; margin-bottom: 14px; }
+    .feat-title { font-size: .95rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .feat-desc { font-size: .82rem; color: var(--muted); line-height: 1.65; }
+
+    /* ─── CODE BLOCK ─────────────────────────────────────────────── */
+    .code-block {
+      background: #0a0f1e; border: 1px solid rgba(79,142,247,.15);
+      border-radius: 12px; padding: 20px 22px; margin: 28px 0;
+      font-family: 'JetBrains Mono', monospace; font-size: .8rem;
+      color: #c0d0f0; line-height: 1.8; overflow-x: auto;
+    }
+    .c-key    { color: #818cf8; }
+    .c-str    { color: #34d399; }
+    .c-type   { color: #f59e0b; }
+    .c-none   { color: #94a3b8; }
+    .c-comment{ color: #4a5a7a; }
+
+    /* ─── RESULTS SECTION ────────────────────────────────────────── */
+    .results { padding: 80px 0; }
+    .results-table {
+      width: 100%; border-collapse: collapse;
+      background: var(--card); border-radius: 14px; overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .results-table th {
+      padding: 14px 20px; text-align: left;
+      font-size: .7rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: .8px; background: rgba(255,255,255,.02);
+      border-bottom: 1px solid var(--border);
+    }
+    .results-table td {
+      padding: 13px 20px; font-size: .85rem; color: var(--text);
+      border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    .results-table tr:last-child td { border-bottom: none; }
+    .results-table tr:hover td { background: rgba(79,142,247,.04); }
+    .badge-code {
+      display: inline-block; padding: 3px 8px; border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace; font-size: .75rem;
+      background: rgba(79,142,247,.1); color: var(--blue); border: 1px solid rgba(79,142,247,.2);
+    }
+
+    /* ─── CTA ────────────────────────────────────────────────────── */
+    .cta {
+      padding: 90px 0;
+      text-align: center;
+    }
+    .cta-card {
+      background: linear-gradient(135deg,rgba(79,142,247,.12),rgba(99,102,241,.08));
+      border: 1px solid rgba(79,142,247,.22);
+      border-radius: 20px; padding: 60px 40px;
+      position: relative; overflow: hidden;
+    }
+    .cta-card::before {
+      content:''; position:absolute; top:-80px; right:-80px;
+      width:320px; height:320px; border-radius:50%;
+      background:radial-gradient(circle,rgba(79,142,247,.15),transparent 70%);
+    }
+    .cta-card h2 { font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 14px; }
+    .cta-card p  { color: var(--muted); font-size: 1rem; margin-bottom: 32px; }
+
+    /* ─── FOOTER ─────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0; text-align: center;
+      color: var(--muted); font-size: .8rem;
+    }
+    footer a { color: var(--blue); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ─── DEFENSE BADGE ──────────────────────────────────────────── */
+    .badge-row { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+    .badge-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 14px; border-radius: 20px; font-size: .76rem; font-weight: 600;
+    }
+    .bp-blue   { background: rgba(79,142,247,.12); color: var(--blue);  border: 1px solid rgba(79,142,247,.25); }
+    .bp-green  { background: rgba(16,185,129,.12); color: var(--green); border: 1px solid rgba(16,185,129,.25); }
+    .bp-gold   { background: rgba(245,158,11,.12); color: var(--gold);  border: 1px solid rgba(245,158,11,.25); }
+    .bp-cyan   { background: rgba(34,211,238,.12); color: var(--cyan);  border: 1px solid rgba(34,211,238,.25); }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────────── */
+    @media(max-width: 768px){
+      .metric-strip { grid-template-columns: repeat(3,1fr); }
+      .pipeline-grid { grid-template-columns: 1fr; }
+      .pipeline-arrow { display: none; }
+      .cost-grid, .feat-grid { grid-template-columns: 1fr; }
+      .hero h1 { font-size: 2.4rem; }
+      .nav-links .nav-pill-ghost { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- ── NAV ─────────────────────────────────────────────────────────── -->
+  <nav>
+    <div class="inner">
+      <div class="nav-logo">
+        <span class="icon">🛡️</span>
+        <div>
+          <div class="name">RazorSentinel-AI</div>
+          <div class="track">Track 02 · AI Risk Manager</div>
+        </div>
+      </div>
+      <div class="nav-links">
+        <a href="#pipeline"  class="nav-pill nav-pill-ghost">Architecture</a>
+        <a href="#results"   class="nav-pill nav-pill-ghost">Results</a>
+        <a href="#guardrail" class="nav-pill nav-pill-ghost">Defense-Only</a>
+        <a href="https://razorsentinel-ai.onrender.com" target="_blank"
+           class="nav-pill nav-pill-primary">Launch Dashboard →</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── HERO ─────────────────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-eyebrow">
+        <div class="live-dot"></div>
+        Razorpay AI Buildathon 2026 · Track 02: AI Risk Manager
+      </div>
+
+      <h1>Stop Merchants Losing Money<br>to Chargebacks</h1>
+
+      <p>
+        RazorSentinel-AI is a two-stage autonomous chargeback defense system.
+        A LightGBM verifier classifies disputes in milliseconds.
+        An LLM auto-responder assembles evidence packets with zero hallucination — guaranteed by design.
+      </p>
+
+      <div class="badge-row">
+        <span class="badge-pill bp-blue">⚡ PR-AUC 0.75</span>
+        <span class="badge-pill bp-green">✅ Defense-Only</span>
+        <span class="badge-pill bp-gold">💰 Cost-Weighted Threshold</span>
+        <span class="badge-pill bp-cyan">🔒 Zero Hallucination</span>
+      </div>
+
+      <div class="hero-btns">
+        <a href="https://razorsentinel-ai.onrender.com" target="_blank" class="btn btn-primary">
+          ⚡ Launch Live Dashboard
+        </a>
+        <a href="https://github.com/shambhushekharsinha-engg/RazorSentinel-AI" target="_blank" class="btn btn-ghost">
+          ⎇ View on GitHub
+        </a>
+      </div>
+
+      <!-- KPI Strip -->
+      <div class="metric-strip">
+        <div class="metric-card">
+          <div class="lbl">PR-AUC</div>
+          <div class="val">0.75</div>
+          <div class="sub">Threshold-independent</div>
+        </div>
+        <div class="metric-card">
+          <div class="lbl">Recall</div>
+          <div class="val">90.2%</div>
+          <div class="sub">Recall-biased · by design</div>
+        </div>
+        <div class="metric-card">
+          <div class="lbl">Precision</div>
+          <div class="val">62.3%</div>
+          <div class="sub">At threshold 0.29</div>
+        </div>
+        <div class="metric-card">
+          <div class="lbl">Test Records</div>
+          <div class="val">10K</div>
+          <div class="sub">Strictly held-out</div>
+        </div>
+        <div class="metric-card">
+          <div class="lbl">Hallucinations</div>
+          <div class="val">Zero</div>
+          <div class="sub">Guaranteed by design</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PIPELINE ────────────────────────────────────────────────────── -->
+  <section class="pipeline" id="pipeline">
+    <div class="container">
+      <div class="section-head">
+        <h2>Two-Stage Architecture</h2>
+        <p>One loss class. One coherent pipeline. Every component serves the same goal: stop the merchant from losing a winnable dispute.</p>
+      </div>
+      <div class="pipeline-grid">
+        <div class="pipeline-card pc-1">
+          <div class="pc-num">Stage 01</div>
+          <div class="pc-title">🤖 LightGBM Verifier</div>
+          <div class="pc-sub">11 structured evidence features (AVS/CVV, device trust, IP/geo, delivery, reason code) → Win probability → Cost-optimal decision threshold.</div>
+          <span class="pc-tag tag-blue">PR-AUC 0.7519</span>
+          <span class="pc-tag tag-blue">Threshold 0.29</span>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-card pc-2">
+          <div class="pc-num">Stage 02</div>
+          <div class="pc-title">🧠 Gemini Auto-Responder</div>
+          <div class="pc-sub">For defensible disputes, the LLM populates a strict Pydantic schema. No free-form prose. Only Boolean flags from a fixed evidence dictionary.</div>
+          <span class="pc-tag tag-indigo">Structured Output</span>
+          <span class="pc-tag tag-indigo">Pydantic v2</span>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-card pc-3">
+          <div class="pc-num">Output</div>
+          <div class="pc-title">✅ Defense Packet JSON</div>
+          <div class="pc-sub">Python guardrail drops any LLM assertion to <code>None</code> if not confirmed by source evidence. Unverified ≠ False. Claims are omitted, never fabricated.</div>
+          <span class="pc-tag tag-green">Zero Hallucination</span>
+          <span class="pc-tag tag-green">Optional[bool]</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── COST MODEL ──────────────────────────────────────────────────── -->
+  <section class="cost-section">
+    <div class="container">
+      <div class="section-head">
+        <h2>💰 Cost-Weighted Decision Making</h2>
+        <p>The threshold is not a default. It is the mathematically optimal point where total expected business loss is minimised.</p>
+      </div>
+      <div class="cost-grid">
+        <div class="cost-card cost-fp">
+          <div class="cost-type">False Positive</div>
+          <div class="cost-amount">₹ 500</div>
+          <div class="cost-desc">
+            Filing a weak dispute defense that loses. Assumed cost: wasted ops time + risk of hurting the merchant's dispute win-ratio with the acquirer.
+            <br><br><em style="color:#6a4a4a;">* Stated assumption, not Razorpay-sourced data.</em>
+          </div>
+        </div>
+        <div class="cost-card cost-fn">
+          <div class="cost-type">False Negative</div>
+          <div class="cost-amount">₹ Amt + 1,500</div>
+          <div class="cost-desc">
+            Missing a winnable dispute. Cost: the full transaction amount lost, plus assumed Visa/MC chargeback fee. FN cost ≫ FP cost — so the threshold is intentionally recall-biased at 0.29.
+            <br><br><em style="color:#6a5a30;">* Stated assumption, not Razorpay-sourced data.</em>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RESULTS ─────────────────────────────────────────────────────── -->
+  <section class="results" id="results">
+    <div class="container">
+      <div class="section-head">
+        <h2>📊 Honest Metrics, Held-Out Test Set</h2>
+        <p>10,000 records never touched during training or threshold selection. 12% label-flip noise injected to prevent trivial 99% accuracy.</p>
+      </div>
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Reason Code</th>
+            <th>Category</th>
+            <th>Test N</th>
+            <th>Base Win Rate</th>
+            <th>Precision</th>
+            <th>Recall</th>
+            <th>F1</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge-code">10.4</span></td>
+            <td>Fraud — Card Absent</td>
+            <td>3,005</td><td>49.9%</td><td>60.2%</td><td>93.2%</td><td>73.2%</td>
+          </tr>
+          <tr>
+            <td><span class="badge-code">13.1</span></td>
+            <td>Merchandise Not Received</td>
+            <td>2,972</td><td>54.8%</td><td>60.5%</td><td>85.6%</td><td>70.9%</td>
+          </tr>
+          <tr>
+            <td><span class="badge-code">13.3</span></td>
+            <td>Not as Described</td>
+            <td>2,012</td><td>55.4%</td><td>66.8%</td><td>91.5%</td><td>77.2%</td>
+          </tr>
+          <tr>
+            <td><span class="badge-code">11.1</span></td>
+            <td>Card Recovery Bulletin</td>
+            <td>514</td><td>55.5%</td><td>65.0%</td><td>88.8%</td><td>75.1%</td>
+          </tr>
+          <tr>
+            <td><span class="badge-code">4853</span></td>
+            <td>Cardholder Dispute (MC)</td>
+            <td>1,497</td><td>55.2%</td><td>62.9%</td><td>92.6%</td><td>74.9%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── GUARDRAIL ───────────────────────────────────────────────────── -->
+  <section class="features" id="guardrail">
+    <div class="container">
+      <div class="section-head">
+        <h2>🔒 Defense-Only Architecture</h2>
+        <p>Three independent layers ensure the system can never be repurposed offensively or generate fabricated evidence claims.</p>
+      </div>
+
+      <div class="code-block">
+<span class="c-comment"># The DefensePacket — every assertion is Optional[bool], never forced to False</span>
+<span class="c-key">class</span> <span class="c-type">DefensePacket</span>(BaseModel):
+    is_defensible: <span class="c-type">bool</span>
+    compelling_evidence_category: <span class="c-type">Literal</span>[<span class="c-str">"Proof of Delivery"</span>, <span class="c-str">"Device/IP Linkage"</span>, ...]
+    asserts_delivery_confirmed: <span class="c-type">Optional</span>[<span class="c-type">bool</span>] = <span class="c-none">None</span>  <span class="c-comment"># None = omitted, not asserted false</span>
+    asserts_auth_match:         <span class="c-type">Optional</span>[<span class="c-type">bool</span>] = <span class="c-none">None</span>
+    asserts_device_match:       <span class="c-type">Optional</span>[<span class="c-type">bool</span>] = <span class="c-none">None</span>
+
+<span class="c-comment"># Python guardrail — runs after every LLM response</span>
+<span class="c-key">if</span> packet.asserts_delivery_confirmed <span class="c-key">and not</span> evidence.delivery_confirmed:
+    packet.asserts_delivery_confirmed = <span class="c-none">None</span>  <span class="c-comment"># omit — never flip to False</span>
+      </div>
+
+      <div class="feat-grid">
+        <div class="feat-card">
+          <div class="feat-icon">📐</div>
+          <div class="feat-title">Structured-In / Structured-Out</div>
+          <div class="feat-desc">The LLM receives a typed <code>DisputeEvidence</code> object and must fill a <code>DefensePacket</code> with specific flags. It cannot write free-form prose, narrative, or embellishments.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🔀</div>
+          <div class="feat-title">Optional[bool] Tri-State</div>
+          <div class="feat-desc"><code>True</code> = confirmed. <code>None</code> = omitted. <code>False</code> = confirmed false from evidence — never set by LLM default. Unverified claims disappear, never get asserted as false.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon">🧪</div>
+          <div class="feat-title">Anti-Leakage Evaluation</div>
+          <div class="feat-desc">12% random label-flip noise prevents trivial 99% accuracy. A pure confounder feature (zero correlation) ranks last in LightGBM gain — confirming the model learns real patterns.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ────────────────────────────────────────────────────────── -->
+  <section class="cta">
+    <div class="container">
+      <div class="cta-card">
+        <h2>See It Running Live</h2>
+        <p>Pull a dispute from the held-out queue, run the verifier, generate a grounded defense packet — in real time.</p>
+        <div class="hero-btns" style="margin-bottom:0;">
+          <a href="https://razorsentinel-ai.onrender.com" target="_blank" class="btn btn-primary">
+            ⚡ Launch Dashboard
+          </a>
+          <a href="https://github.com/shambhushekharsinha-engg/RazorSentinel-AI" target="_blank" class="btn btn-ghost">
+            ⎇ GitHub Repo
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ─────────────────────────────────────────────────────── -->
+  <footer>
+    <div class="container">
+      🛡️ <strong>RazorSentinel-AI</strong> · Razorpay AI Buildathon 2026 · Track 02: AI Risk Manager ·
+      <a href="https://github.com/shambhushekharsinha-engg/RazorSentinel-AI">GitHub</a> ·
+      <a href="https://razorsentinel-ai.onrender.com">Live Dashboard</a>
+    </div>
+  </footer>
+</body>
+</html>
