@@ -6,5 +6,5 @@ pydantic
 google-genai
 matplotlib
 seaborn
-
+plotly
 streamlit
