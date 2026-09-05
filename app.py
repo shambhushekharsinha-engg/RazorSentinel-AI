@@ -329,7 +329,8 @@ elif "Triage" in page:
 
     if pull_btn:
         pool = df[df['dispute_won']==1] if "Winnable" in queue_filter else (df[df['dispute_won']==0] if "Lost" in queue_filter else df)
-        sample = pool.sample(1).iloc[0]
+        sample_df = pool.sample(1)
+        sample = sample_df.iloc[0]
         evidence = DisputeEvidence(
             transaction_id=sample['transaction_id'], reason_code=str(sample['reason_code']),
             avs_match=bool(sample['avs_match']), cvv_match=bool(sample['cvv_match']),
@@ -354,7 +355,7 @@ elif "Triage" in page:
         with left_col:
             st.markdown('<div class="glass">', unsafe_allow_html=True)
             st.markdown('<div class="sbadge">Stage 1 · LightGBM Verifier</div>', unsafe_allow_html=True)
-            pred_row = sample[FEATURES].to_frame().T.copy()
+            pred_row = sample_df[FEATURES].copy()
             pred_row['reason_code'] = pred_row['reason_code'].astype(str).astype('category')
             prob = float(model.predict(pred_row)[0])
             is_def = prob > THRESHOLD
