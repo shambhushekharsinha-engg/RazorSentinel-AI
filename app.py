@@ -5,8 +5,6 @@ import os
 import joblib
 import time
 import plotly.graph_objects as go
-import plotly.express as px
-from plotly.subplots import make_subplots
 from sklearn.metrics import (
     precision_score, recall_score, f1_score,
     average_precision_score, confusion_matrix,
@@ -344,7 +342,7 @@ elif "Triage" in page:
         for col, (lbl, val) in zip(st.columns(5), [
             ("Transaction ID", evidence.transaction_id),
             ("Amount", f"₹{evidence.transaction_amount:,.2f}"),
-            ("Reason Code", REASON_MAP.get(evidence.reason_code, evidence.reason_code)[:14]),
+            ("Reason Code", REASON_MAP.get(evidence.reason_code, evidence.reason_code)),
             ("Device Trust", f"{evidence.device_trust_score:.2f}"),
             ("Customer Age", f"{evidence.customer_history_days}d")
         ]):
@@ -399,7 +397,16 @@ elif "Triage" in page:
             st.markdown('<div class="glass">', unsafe_allow_html=True)
             st.markdown('<div class="sbadge">Stage 2 · Auto-Responder</div>', unsafe_allow_html=True)
             with st.spinner("Assembling grounded defense packet…"):
+                import datetime
+                has_key = bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
                 packet = generate_defense_packet(evidence)
+                gen_time = datetime.datetime.now().strftime("%H:%M:%S IST")
+
+            # Mode indicator
+            if has_key:
+                st.success("🤖 **Gemini Active** — LLM generated this defense packet")
+            else:
+                st.warning("⚙️ **Deterministic Fallback** — Set `GEMINI_API_KEY` on Render for live LLM responses")
             pkt_color = "#10b981" if packet.is_defensible else "#ef4444"
             st.markdown(f"""<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px 18px;margin:6px 0 14px;">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -421,6 +428,13 @@ elif "Triage" in page:
             st.markdown(pills, unsafe_allow_html=True)
             st.markdown('<div style="font-size:.7rem;color:#4f6a9a;text-transform:uppercase;letter-spacing:.9px;margin:14px 0 6px;">Defense Packet JSON</div>', unsafe_allow_html=True)
             st.json(packet.model_dump(), expanded=False)
+            import json as _json
+            st.download_button(
+                label="⬇️  Download Defense Packet",
+                data=_json.dumps(packet.model_dump(), indent=2),
+                file_name=f"defense_packet_{evidence.transaction_id}.json",
+                mime="application/json",
+            )
             gt_val = int(sample['dispute_won'])
             gt_color = "#10b981" if gt_val==1 else "#ef4444"
             st.markdown(f'<div style="margin-top:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;"><span style="color:#6b7a9f;font-size:.8rem;">Ground-Truth Label</span><span style="color:{gt_color};font-weight:800;">{"🏆 WON" if gt_val==1 else "❌ LOST"}</span></div>', unsafe_allow_html=True)

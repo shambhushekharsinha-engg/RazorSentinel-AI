@@ -12,12 +12,12 @@ def generate_defense_packet(evidence: DisputeEvidence) -> DefensePacket:
     the LLM cannot hallucinate claims that contradict the source evidence.
     """
     
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
-        print("WARNING: GEMINI_API_KEY not set. Falling back to deterministic orchestrator.")
+        print("WARNING: No API key set (GEMINI_API_KEY or GOOGLE_API_KEY). Using deterministic fallback.")
         return deterministic_fallback(evidence)
 
-    client = genai.Client()
+    client = genai.Client(api_key=api_key)
     
     prompt = f"""
     You are an automated chargeback defense orchestrator.

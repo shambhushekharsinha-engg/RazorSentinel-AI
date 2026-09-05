@@ -4,7 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RazorSentinel-AI · Chargeback Defense</title>
-  <meta name="description" content="Autonomous Chargeback Verifier & Evidence Responder. PR-AUC 0.75 · Zero hallucination · Defense-only. Razorpay AI Buildathon Track 02." />
+  <meta name="description" content="Autonomous Chargeback Verifier & Evidence Responder. PR-AUC 0.75 · Grounded claims · Defense-only. Razorpay AI Buildathon Track 02." />
+
+  <!-- Emoji Favicon (no file needed) -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+
+  <!-- Open Graph (LinkedIn, WhatsApp, Slack) -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://razorsentinel-ai.vercel.app/" />
+  <meta property="og:title"       content="RazorSentinel-AI · Autonomous Chargeback Defense" />
+  <meta property="og:description" content="Two-stage chargeback evidence responder. LightGBM verifier (PR-AUC 0.75) + Gemini auto-responder with grounded claims. Razorpay AI Buildathon Track 02." />
+  <meta property="og:image"       content="https://opengraph.githubassets.com/1/shambhushekharsinha-engg/RazorSentinel-AI" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="RazorSentinel-AI · Autonomous Chargeback Defense" />
+  <meta name="twitter:description" content="LightGBM verifier + Gemini auto-responder with grounded claims. PR-AUC 0.75 · Recall 90.2% · Defense-only." />
+  <meta name="twitter:image"       content="https://opengraph.githubassets.com/1/shambhushekharsinha-engg/RazorSentinel-AI" />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -199,7 +215,14 @@
       font-size: 1.9rem; font-weight: 900; color: #fff; margin: 8px 0 4px;
       text-shadow: 0 0 24px rgba(79,142,247,.5);
     }
-    .metric-card .sub { font-size: .7rem; color: #3a4a6a; }
+    .metric-card .sub { font-size: .7rem; color: #5a6e94; } /* contrast fix: was #3a4a6a */
+
+    /* ─── INLINE CODE ─────────────────────────────────────────── */
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .85em; background: rgba(79,142,247,.1);
+      padding: 2px 6px; border-radius: 4px; color: #a0c0ff;
+    }
 
     /* ─── SECTION HEADING ────────────────────────────────────────── */
     .section-head { text-align: center; margin-bottom: 52px; }
@@ -348,12 +371,13 @@
 
     /* ─── RESPONSIVE ─────────────────────────────────────────────── */
     @media(max-width: 768px){
-      .metric-strip { grid-template-columns: repeat(3,1fr); }
+      .metric-strip { grid-template-columns: repeat(3,1fr); justify-items: center; }
       .pipeline-grid { grid-template-columns: 1fr; }
       .pipeline-arrow { display: none; }
       .cost-grid, .feat-grid { grid-template-columns: 1fr; }
       .hero h1 { font-size: 2.4rem; }
       .nav-links .nav-pill-ghost { display: none; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     }
   </style>
 </head>
@@ -379,7 +403,7 @@
         <a href="#pipeline"  class="nav-pill nav-pill-ghost">Architecture</a>
         <a href="#results"   class="nav-pill nav-pill-ghost">Results</a>
         <a href="#guardrail" class="nav-pill nav-pill-ghost">Defense-Only</a>
-        <a href="https://razorsentinel-ai.onrender.com" target="_blank"
+        <a href="https://razorsentinel-ai.onrender.com" target="_blank" rel="noopener noreferrer"
            class="nav-pill nav-pill-primary">Launch Dashboard →</a>
       </div>
     </div>
@@ -409,12 +433,15 @@
       </div>
 
       <div class="hero-btns">
-        <a href="https://razorsentinel-ai.onrender.com" target="_blank" class="btn btn-primary">
+        <a href="https://razorsentinel-ai.onrender.com" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
           ⚡ Launch Live Dashboard
         </a>
-        <a href="https://github.com/shambhushekharsinha-engg/RazorSentinel-AI" target="_blank" class="btn btn-ghost">
+        <a href="https://github.com/shambhushekharsinha-engg/RazorSentinel-AI" target="_blank" rel="noopener noreferrer" class="btn btn-ghost">
           ⎇ View on GitHub
         </a>
+      </div>
+      <div style="margin-top:-42px;margin-bottom:48px;font-size:.74rem;color:#4f6a9a;">
+        ⏱ Dashboard may take ~30s to wake from sleep on first click
       </div>
 
       <!-- KPI Strip -->
@@ -504,7 +531,7 @@
           <div class="cost-amount">₹ Amt + 1,500</div>
           <div class="cost-desc">
             Missing a winnable dispute. Cost: the full transaction amount lost, plus assumed Visa/MC chargeback fee. FN cost ≫ FP cost — so the threshold is intentionally recall-biased at 0.29.
-            <br><br><em style="color:#6a5a30;">* Stated assumption, not Razorpay-sourced data.</em>
+            <br><br><em style="color:#7a8aaa;">* Stated assumption, not Razorpay-sourced data.</em>
           </div>
         </div>
       </div>
@@ -518,6 +545,7 @@
         <h2>📊 Honest Metrics, Held-Out Test Set</h2>
         <p>10,000 records never touched during training or threshold selection. 12% label-flip noise injected to prevent trivial 99% accuracy.</p>
       </div>
+      <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
       <table class="results-table">
         <thead>
           <tr>
@@ -558,6 +586,7 @@
           </tr>
         </tbody>
       </table>
+      </div><!-- /table-wrap -->
     </div>
   </section>
 
