@@ -1,5 +1,9 @@
 <div align="center">
 
+<img src="assets/logo.jpg" alt="RazorSentinel-AI Logo" width="600" style="border-radius:8px;"/>
+
+<br/>
+
 <img src="https://img.shields.io/badge/🛡️_RazorSentinel--AI-Chargeback_Defense-0d1526?style=for-the-badge&labelColor=050914" alt="RazorSentinel-AI"/>
 
 <br/><br/>
