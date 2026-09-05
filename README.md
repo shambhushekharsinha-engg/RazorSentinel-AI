@@ -30,8 +30,67 @@
 
 ---
 
+## 🎥 Video Demo & Screenshots
+
+**Watch the full 5-minute pitch and demo:**  
+<a href="https://www.youtube.com/watch?v=dAWx58ywIFE">
+  <img src="https://img.youtube.com/vi/dAWx58ywIFE/maxresdefault.jpg" width="800" alt="RazorSentinel-AI Pitch Video">
+</a>
+
+<br/>
+
+### 📸 Application Gallery
+
+<details>
+<summary><b>Click to expand and view all 21 interface screenshots</b></summary>
+
+<br/>
+
+<table>
+  <tr>
+    <td width="33%"><img src="Project%20demo/screenshot_01.png" alt="Screenshot 1"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_02.png" alt="Screenshot 2"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_03.png" alt="Screenshot 3"></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="Project%20demo/screenshot_04.png" alt="Screenshot 4"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_05.png" alt="Screenshot 5"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_06.png" alt="Screenshot 6"></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="Project%20demo/screenshot_07.png" alt="Screenshot 7"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_08.png" alt="Screenshot 8"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_09.png" alt="Screenshot 9"></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="Project%20demo/screenshot_10.png" alt="Screenshot 10"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_11.png" alt="Screenshot 11"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_12.png" alt="Screenshot 12"></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="Project%20demo/screenshot_13.png" alt="Screenshot 13"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_14.png" alt="Screenshot 14"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_15.png" alt="Screenshot 15"></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="Project%20demo/screenshot_16.png" alt="Screenshot 16"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_17.png" alt="Screenshot 17"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_18.png" alt="Screenshot 18"></td>
+  </tr>
+  <tr>
+    <td width="33%"><img src="Project%20demo/screenshot_19.png" alt="Screenshot 19"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_20.png" alt="Screenshot 20"></td>
+    <td width="33%"><img src="Project%20demo/screenshot_21.png" alt="Screenshot 21"></td>
+  </tr>
+</table>
+
+</details>
+
+---
+
 ## 📋 Table of Contents
 
+- [Video Demo & Screenshots](#-video-demo--screenshots)
 - [What It Solves](#-what-it-solves)
 - [Razorpay Integration Boundary](#-razorpay-integration-boundary)
 - [Architecture](#-architecture)
